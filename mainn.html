@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <title>冰箱小管家 - 筆記模式</title>
+    <style>
+      :root {
+         --bg-grid: #f4f4f4;
+         --ink: #333;
+         --card-bg: #ffffff;
+         --highlight-yellow: rgba(255, 241, 0, 0.4);
+         --highlight-green: rgba(0, 255, 127, 0.3);
+         --highlight-red: rgba(255, 69, 58, 0.2);
+         
+         /* 按鈕顏色變數 */
+         --btn-red: #e74c3c;
+         --btn-orange: #f39c12;
+         --btn-green: #27ae60;
+         --btn-black: #333;
+      }
+      
+      body { 
+        font-family: 'Courier Prime', 'Noto Sans TC', monospace;
+        background-color: #fff;
+        background-image: 
+            linear-gradient(#e5e5e5 1px, transparent 1px),
+            linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+        background-size: 50px 50px;
+        margin: 0; 
+        padding: 20px; 
+        color: var(--ink); 
+        padding-bottom: 120px; 
+        
+        /* 關鍵：左側留白給側邊欄 (140px寬度 + 20px間距) */
+        padding-left: 160px; 
+      }
+
+      /* --- 側邊導覽列 (Side Menu) --- */
+      .side-menu {
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100%; /* 全高度 */
+          width: 140px; /* 固定寬度 */
+          background: #fff; /* 白底 */
+          border-right: 3px solid var(--ink); /* 右側粗黑線分隔 */
+          display: flex;
+          flex-direction: column;
+          padding: 20px 15px;
+          box-sizing: border-box;
+          z-index: 2000;
+          box-shadow: 5px 0 15px rgba(0,0,0,0.05); /* 微微陰影讓它浮起來 */
+      }
+
+      /* 選單標題 (MENU) */
+      .menu-label {
+          font-size: 1.2rem;
+          font-weight: 900;
+          text-align: center;
+          margin-bottom: 30px;
+          border-bottom: 2px dashed #ccc;
+          padding-bottom: 10px;
+          color: var(--ink);
+          letter-spacing: 2px;
+      }
+
+      .side-btn {
+          width: 100%;
+          padding: 15px 10px;
+          margin-bottom: 15px;
+          font-family: inherit;
+          font-weight: bold;
+          font-size: 13px;
+          text-transform: uppercase;
+          cursor: pointer;
+          border: 2px solid;
+          background: #fff;
+          box-shadow: 4px 4px 0 rgba(0,0,0,0.1); /* 方塊陰影 */
+          transition: all 0.1s;
+          text-align: center;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          border-radius: 4px;
+      }
+
+      /* 按鈕 Icon 大小 */
+      .side-btn span { font-size: 24px; display: block; }
+
+      /* 按鈕懸停效果 */
+      .side-btn:hover { 
+          transform: translate(-2px, -2px); 
+          box-shadow: 6px 6px 0 rgba(0,0,0,0.15); 
+      }
+      .side-btn:active { 
+          transform: translate(2px, 2px); 
+          box-shadow: 2px 2px 0 rgba(0,0,0,0.1); 
+      }
+
+      /* 個別按鈕配色 */
+      .btn-expired { color: var(--btn-red); border-color: var(--btn-red); }
+      .btn-expired:hover { background: #fff0f0; }
+
+      .btn-soon { color: var(--btn-orange); border-color: var(--btn-orange); }
+      .btn-soon:hover { background: #fff8e8; }
+
+      .btn-valid { color: var(--btn-green); border-color: var(--btn-green); }
+      .btn-valid:hover { background: #f0fff4; }
+
+      /* 登出按鈕：推到底部 */
+      .btn-exit { 
+          margin-top: auto; /* 自動推到底 */
+          background: var(--ink); 
+          color: #fff; 
+          border-color: var(--ink); 
+      }
+      .btn-exit:hover { background: #000; border-color: #000; color: #fff; }
+
+
+      /* --- RWD 手機版：變成底部導覽列 --- */
+      @media (max-width: 850px) {
+          body {
+              padding-left: 20px; /* 恢復原本內距 */
+              padding-bottom: 100px; /* 底部留空給選單 */
+          }
+          .side-menu {
+              width: 100%; 
+              height: auto; /* 高度自動 */
+              top: auto; 
+              bottom: 0; /* 貼底 */
+              border-right: none; 
+              border-top: 3px solid var(--ink); /* 改成上邊框 */
+              flex-direction: row; /* 水平排列 */
+              padding: 10px;
+              gap: 8px;
+              justify-content: space-around;
+              box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+          }
+          .menu-label { display: none; /* 手機版隱藏 MENU 標題 */ }
+          
+          .side-btn {
+              margin-bottom: 0;
+              flex: 1; /* 平均分配寬度 */
+              box-shadow: none; /* 手機版移除陰影比較乾淨 */
+              font-size: 11px;
+              padding: 6px 2px;
+              border-width: 1px;
+          }
+          .side-btn span { font-size: 18px; }
+          .side-btn:hover { transform: none; box-shadow: none; }
+          .btn-exit { margin-top: 0; }
+      }
+
+      /* --------------------------- */
+
+      .main-wrapper {
+        max-width: 850px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .panel-card {
+        background: var(--card-bg);
+        border: 2px solid var(--ink);
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 8px 8px 0 rgba(0,0,0,0.1); 
+        position: relative;
+        z-index: 10;
+      }
+
+      .header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 25px; 
+        border-bottom: 4px solid var(--ink); 
+        padding-bottom: 15px; 
+        font-weight: 700;
+        font-size: 1.4rem;
+        letter-spacing: -1px;
+      }
+      
+      input, button { 
+        width: 100%; 
+        padding: 14px; 
+        margin-bottom: 15px; 
+        border-radius: 0;
+        box-sizing: border-box; 
+        font-family: inherit;
+        font-size: 16px;
+      }
+      
+      input {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #aaa;
+        transition: border-color 0.2s;
+      }
+      input:focus {
+        outline: none;
+        border-bottom: 2px solid #000;
+        background: rgba(0,0,0,0.02);
+      }
+
+      /* 主要操作按鈕 (COMMIT) */
+      .action-btn { 
+        background: var(--ink); 
+        color: white; 
+        border: 2px solid var(--ink);
+        font-weight: bold; 
+        cursor: pointer; 
+        transition: all 0.1s;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .action-btn:active { transform: translate(2px, 2px); }
+
+      .btn-row { display: flex; gap: 15px; }
+
+      .mode-switch { 
+          display: flex; 
+          justify-content: flex-end; 
+          margin-bottom: 15px; 
+          font-size: 14px; 
+          color: #555; 
+          font-family: monospace; 
+      }
+      .mode-switch label {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          user-select: none;
+      }
+      .mode-switch input { width: auto; margin: 0 8px 0 0; transform: scale(1.2); }
+      .active-mode { color: #000; font-weight: bold; text-decoration: underline; text-decoration-thickness: 3px; text-decoration-color: var(--highlight-green); }
+
+      #list { margin-top: 20px; }
+
+      .group-container { background: transparent; border: none; margin-bottom: 30px; overflow: visible; }
+      
+      .group-header {
+          padding: 12px 10px;
+          background: rgba(255,255,255,0.7); 
+          backdrop-filter: blur(2px); 
+          cursor: pointer;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 3px solid #000; 
+          margin-bottom: 15px;
+          transition: background 0.1s;
+      }
+      .group-header:hover { opacity: 0.8; }
+      .group-header.active { background: rgba(255,255,255,0.9); }
+      
+      .group-title { font-weight: 700; font-size: 20px; display: flex; align-items: center; color: #000; }
+      .group-title b { background: var(--highlight-yellow); padding: 0 5px; color: #000; box-shadow: 3px 3px 0 rgba(0,0,0,0.1); }
+      .group-info { font-size: 14px; text-align: right; color: #666; font-family: monospace; font-weight: bold; }
+      
+      .arrow-icon { 
+          margin-right: 10px; 
+          font-size: 14px; 
+          color: #000; 
+          transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1); 
+      }
+      
+      .card { 
+        border: none; 
+        border-bottom: 1px dashed #999; 
+        padding: 18px 10px; 
+        margin-bottom: 0; 
+        border-radius: 0; 
+        display: flex; 
+        align-items: center; 
+        background: transparent; 
+        position: relative; 
+        transition: background 0.1s;
+      }
+      .card:hover { background: rgba(0,0,0,0.05); }
+      .card.temp-item { background: #fffdf5; border-left: 5px solid #f39c12; }
+      .card.pending-item { border: 2px solid #3498db; background: #f0f8ff; margin-bottom: 10px; box-shadow: 4px 4px 0 rgba(52, 152, 219, 0.2); }
+      
+      .chk-wrapper { display: flex; align-items: center; padding-right: 20px; }
+      .del-checkbox { width: 22px; height: 22px; cursor: pointer; border: 2px solid #000; accent-color: #000; }
+      .card img { width: 55px; height: 55px; object-fit: cover; border: 2px solid #000; margin-right: 20px; cursor: pointer; background: #eee; filter: grayscale(20%); box-shadow: 3px 3px 0 rgba(0,0,0,0.2); }
+      .creator-tag { font-size: 13px; color: #000; background: transparent; padding: 0; font-weight: bold; text-decoration: underline; }
+      .tag { font-size: 13px; padding: 2px 6px; border-radius: 0; color: #000; margin-top: 5px; display: inline-block; font-weight: bold; }
+      .bg-green { background: linear-gradient(to top, var(--highlight-green) 60%, transparent 60%); } 
+      .bg-yellow { background: linear-gradient(to top, var(--highlight-yellow) 60%, transparent 60%); } 
+      .bg-red { background: linear-gradient(to top, var(--highlight-red) 60%, transparent 60%); color: #d63031; }
+      
+      .group-body { display: none; background: transparent; padding: 0; padding-left: 15px; border-left: 3px double #ccc; }
+      
+      #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+      #imageModal img { max-width: 90%; max-height: 80vh; border: 5px solid #000; box-shadow: 10px 10px 0 rgba(0,0,0,0.1); }
+      
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
+      .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 0.5s linear infinite; }
+      @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+      #scanOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10001; display: none; flex-direction: column; justify-content: center; align-items: center; }
+      .scan-box { width: 250px; height: 250px; border: 2px solid #0f0; border-radius: 0; position: relative; overflow: hidden; background: rgba(0, 255, 0, 0.05); }
+      .scan-line { width: 100%; height: 5px; background: #0f0; box-shadow: 0 0 15px #0f0, 0 0 30px #0f0; position: absolute; top: 0; left: 0; animation: scanDown 1.2s linear infinite; }
+      @keyframes scanDown { 0% { transform: translateY(-10px); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(260px); opacity: 0; } }
+      .scan-text { color: #0f0; margin-top: 20px; font-family: monospace; letter-spacing: 2px; text-shadow: 0 0 10px #0f0; }
+
+      .float-btn { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; border: 2px solid #000; box-shadow: 5px 5px 0 #000; display: none; z-index: 5000; width: auto; cursor: pointer; color: white; transition: transform 0.1s; }
+      .float-btn:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 3px 3px 0 #000; }
+      #bulkDelBtn { background: #e74c3c; color: white; }
+      #bulkAddBtn { background: #2ecc71; color: #000; }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText" style="font-family:monospace; font-weight:bold;">SYSTEM SYNC...</div>
+    </div>
+    
+    <div id="scanOverlay">
+        <div class="scan-box"><div class="scan-line"></div></div>
+        <div class="scan-text">SCANNING TARGET...</div>
+    </div>
+
+    <div class="side-menu">
+        <div class="menu-label">MENU</div>
+        
+        <button class="side-btn btn-expired" onclick="window.location.href='expired.html'">
+            <span>⚠️</span>
+            EXPIRED
+        </button>
+        <button class="side-btn btn-soon" onclick="window.location.href='soon.html'">
+            <span>⏳</span>
+            SOON
+        </button>
+        <button class="side-btn btn-valid" onclick="window.location.href='valid.html'">
+            <span>✅</span>
+            VALID
+        </button>
+        
+        <button class="side-btn btn-exit" onclick="doLogout()">
+            <span>🚪</span>
+            EXIT
+        </button>
+    </div>
+
+    <button id="bulkDelBtn" class="float-btn" onclick="doMultiDelete()">[ DELETE SELECTED ]</button>
+    <button id="bulkAddBtn" class="float-btn" onclick="doMultiAddUpload()">[ UPLOAD DATA ]</button>
+
+    <div id="imageModal" onclick="this.style.display='none'">
+        <img id="largeImgDisplay" src="">
+        <p style="color:#000; margin-top:15px; font-family:monospace; background:white; padding:5px;">[ CLICK TO CLOSE ]</p>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="panel-card">
+            <div class="header">
+                <div>FRIDGE LOG <span id="displayCode" style="background:#000; color:#fff; padding:2px 6px; font-size:14px;">...</span></div>
+                </div>
+
+            <div class="mode-switch">
+                <label>
+                    <input type="checkbox" id="batchModeToggle" onchange="toggleBatchMode()">
+                    <span id="modeText">BATCH MODE</span>
+                </label>
+            </div>
+
+            <input type="text" id="inCreator" list="cHistory" placeholder="USER (NAME)">
+            <datalist id="cHistory"></datalist>
+            <input type="text" id="inName" placeholder="ITEM NAME">
+            <input type="text" id="inLoc" placeholder="LOCATION (SHELF/BIN)">
+            
+            <input type="date" id="inDate" onkeydown="return false" onclick="try{this.showPicker()}catch(e){}">
+
+            <div class="btn-row">
+                <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="document.getElementById('pText').innerText='[ PHOTO SELECTED ]'">
+                <button style="background:transparent; color:#000; border:2px dashed #000;" onclick="document.getElementById('fileIn').click()">[ PHOTO ]</button>
+                <button id="mainActionBtn" class="action-btn" onclick="doAdd()">>>> COMMIT</button>
+            </div>
+            <div id="pText" style="font-family:monospace; font-size:12px; color:#000; text-align:center;"></div>
+            
+            <div id="pendingArea" style="display:none; margin-top:15px; border-top: 2px dashed #000; padding-top:15px;">
+                <div style="font-size:14px; color:#000; margin-bottom:10px; font-weight:bold;">STAGING AREA (UNSAVED)</div>
+                <div id="pendingList"></div>
+            </div>
+        </div>
+
+        <div class="panel-card" style="padding: 20px;">
+            <input type="text" id="search" placeholder="> SEARCH LOGS..." onkeyup="renderList()" style="margin-bottom:0; border-color:#333;">
+        </div>
+
+        <div id="list"></div>
+    </div>
+
+    <script>
+        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        var allData = [];
+        var pendingData = []; 
+        var isBatchMode = false;
+
+        function showLoader(text) {
+            document.getElementById("loaderText").innerText = text;
+            document.getElementById("loader").style.display = "flex";
+        }
+        function hideLoader() { document.getElementById("loader").style.display = "none"; }
+
+        function openModal(src) {
+            document.getElementById("largeImgDisplay").src = src;
+            document.getElementById("imageModal").style.display = "flex";
+        }
+
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                var reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    var img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        var canvas = document.createElement('canvas');
+                        var MAX_WIDTH = 800; 
+                        var scaleSize = MAX_WIDTH / img.width;
+                        if (scaleSize > 1) scaleSize = 1;
+                        canvas.width = img.width * scaleSize;
+                        canvas.height = img.height * scaleSize;
+                        var ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        resolve(canvas.toDataURL("image/jpeg", 0.7).split(",")[1]); 
+                    }
+                }
+            });
+        }
+
+        function callApi(action, payload, cb, silent) {
+            payload.action = action;
+            if(!silent) {
+                let msg = "PROCESSING...";
+                if(action === "delete") msg = "SYNCING...";
+                if(action === "deleteMulti") msg = "DELETING...";
+                if(action === "addMulti") msg = "UPLOADING...";
+                if(action === "getList") msg = "SYNCING...";
+                showLoader(msg);
+            }
+            fetch(API_URL, { method: "POST", body: JSON.stringify(payload) })
+            .then(r => r.json()).then(res => {
+                if(!silent) hideLoader();
+                cb(res);
+            }).catch(e => { hideLoader(); console.error(e); });
+        }
+
+        function doLogout() { localStorage.clear(); window.location.href = "index.html"; }
+
+        function toggleBatchMode() {
+            var checkbox = document.getElementById("batchModeToggle");
+            isBatchMode = checkbox.checked;
+            var btn = document.getElementById("mainActionBtn");
+            var txt = document.getElementById("modeText");
+            var pArea = document.getElementById("pendingArea");
+            if(isBatchMode) {
+                btn.innerText = "➕ ADD TO STAGE";
+                btn.style.background = "#2ecc71";
+                btn.style.color = "#000";
+                txt.classList.add("active-mode");
+                pArea.style.display = "block";
+            } else {
+                btn.innerText = ">>> COMMIT";
+                btn.style.background = "#333";
+                btn.style.color = "#fff";
+                txt.classList.remove("active-mode");
+                if(pendingData.length === 0) pArea.style.display = "none";
+            }
+            renderPendingList();
+        }
+
+        function doAdd() {
+            var name = document.getElementById("inName").value.trim();
+            var date = document.getElementById("inDate").value;
+            var loc = document.getElementById("inLoc").value;
+            var creator = document.getElementById("inCreator").value;
+            var file = document.getElementById("fileIn").files[0];
+            if(!name || !date) return alert("REQUIRED FIELDS MISSING");
+
+            var processData = (base64Img) => {
+                var newItem = {
+                    name: name, loc: loc, date: date, creator: creator, image: base64Img || ""
+                };
+                if (isBatchMode) {
+                    pendingData.push(newItem);
+                    renderPendingList();
+                    document.getElementById("inName").value = "";
+                    document.getElementById("pText").innerText = "";
+                    document.getElementById("fileIn").value = "";
+                    if(navigator.vibrate) navigator.vibrate(50);
+                } else {
+                    var scanOverlay = document.getElementById("scanOverlay");
+                    scanOverlay.style.display = 'flex';
+                    
+                    setTimeout(() => {
+                        scanOverlay.style.display = 'none';
+                        var tempId = Date.now();
+                        var tempItem = {
+                            rowId: tempId, name: name, location: loc, date: date, creator: creator, 
+                            imgUrl: base64Img ? "data:image/jpeg;base64," + base64Img : "",
+                            isTemp: true
+                        };
+                        allData.unshift(tempItem);
+                        renderList(); 
+                        document.getElementById("inName").value = "";
+                        document.getElementById("pText").innerText = "";
+                        document.getElementById("fileIn").value = "";
+                        var pl = { code: localStorage.getItem("pass_code"), ...newItem };
+                        callApi("add", pl, (res) => { updateLocalData(res.data); }, true);
+                    }, 2500);
+                }
+            };
+            if(file) compressImage(file).then(base64 => processData(base64));
+            else processData("");
+        }
+
+        function renderPendingList() {
+            var div = document.getElementById("pendingList");
+            var btn = document.getElementById("bulkAddBtn");
+            if(pendingData.length > 0) {
+                btn.style.display = "block";
+                btn.innerText = "[ UPLOAD ALL (" + pendingData.length + ") ]";
+                
+                var html = pendingData.map((item, idx) => `
+                    <div class="card pending-item">
+                        <div style="flex:1">
+                            <div><b>${item.name}</b> <span style="font-size:12px;color:#666">(${item.date})</span></div>
+                            <div style="font-size:12px; color:#666">@ ${item.location}</div>
+                        </div>
+                        <button style="width:auto; background:none; color:#e74c3c; border:none; font-size:20px;" onclick="removePending(${idx})">✕</button>
+                    </div>
+                `).join("");
+                div.innerHTML = html;
+            } else {
+                btn.style.display = "none";
+                div.innerHTML = "<div style='text-align:center;color:#aaa;font-size:12px;padding:10px;'>[ EMPTY ]</div>";
+            }
+        }
+
+        function removePending(idx) {
+            pendingData.splice(idx, 1);
+            renderPendingList();
+        }
+
+        function doMultiAddUpload() {
+            if(pendingData.length === 0) return;
+            if(!confirm("CONFIRM UPLOAD " + pendingData.length + " ITEMS?")) return;
+
+            var scanOverlay = document.getElementById("scanOverlay");
+            scanOverlay.style.display = 'flex';
+            document.querySelector(".scan-text").innerText = "BATCH PROCESSING...";
+            setTimeout(() => {
+                var code = localStorage.getItem("pass_code");
+                pendingData.forEach(item => {
+                    var tempItem = {
+                        rowId: Date.now() + Math.random(), 
+                        name: item.name, location: item.loc, date: item.date, creator: item.creator, 
+                        imgUrl: item.image ? "data:image/jpeg;base64," + item.image : "",
+                        isTemp: true
+                    };
+                    allData.unshift(tempItem);
+                });
+                renderList();
+                callApi("addMulti", { items: pendingData, code: code }, function(res) {
+                    scanOverlay.style.display = 'none';
+                    pendingData = [];
+                    renderPendingList();
+                    updateLocalData(res.data);
+                    alert("UPLOAD COMPLETE");
+                    document.querySelector(".scan-text").innerText = "SCANNING TARGET...";
+                }, true);
+            }, 2500);
+        }
+
+        function doDel(id) { 
+            if(confirm("DELETE ITEM?")) {
+                allData = allData.filter(item => item.rowId !== id);
+                renderList(); 
+                var code = localStorage.getItem("pass_code");
+                callApi("delete", { id: id, code: code }, function(res) { updateLocalData(res.data); }, true);
+            }
+        }
+
+        function doMultiDelete() {
+            var checkboxes = document.querySelectorAll('.del-checkbox:checked');
+            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            if (idsToDelete.length === 0) return;
+            if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
+            
+            allData = allData.filter(item => !idsToDelete.includes(item.rowId));
+            renderList();
+            
+            var code = localStorage.getItem("pass_code");
+            callApi("deleteMulti", { ids: idsToDelete, code: code }, function(res) { 
+                if(res.status === "success" && Array.isArray(res.data)) {
+                    updateLocalData(res.data);
+                }
+            }, true);
+        }
+
+        function checkSelection() {
+            var count = document.querySelectorAll('.del-checkbox:checked').length;
+            var btn = document.getElementById("bulkDelBtn");
+            if (count > 0) { btn.style.display = "block";
+            btn.innerText = "[ DELETE SELECTED (" + count + ") ]"; } 
+            else { btn.style.display = "none"; }
+        }
+
+        function updateLocalData(newData) {
+            if (newData && Array.isArray(newData)) {
+                allData = newData;
+            }
+            localStorage.setItem("cached_fridge_data", JSON.stringify(allData));
+            renderList();
+            
+            var hist = [...new Set(allData.map(i => i.creator))].filter(c => c);
+            document.getElementById("cHistory").innerHTML = hist.map(c => `<option value="${c}">`).join("");
+        }
+
+        function toggleGroup(groupId) {
+            var body = document.getElementById('group-body-' + groupId);
+            var header = document.getElementById('group-header-' + groupId);
+            if (body.style.display === "none" || body.style.display === "") {
+                body.style.display = "block";
+                header.classList.add("active");
+            } else {
+                body.style.display = "none";
+                header.classList.remove("active");
+            }
+        }
+
+        function renderList() {
+            var listDiv = document.getElementById("list");
+            var key = document.getElementById("search").value.toLowerCase();
+            var today = new Date(); today.setHours(0,0,0,0);
+            var filtered = allData.filter(i => {
+                var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
+                return s.toLowerCase().includes(key);
+            });
+            if (filtered.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center;color:#999;font-family:monospace; margin-top:30px;'>[ NO DATA FOUND ]</p>";
+                checkSelection();
+                return;
+            }
+
+            var groups = {};
+            filtered.forEach(item => {
+                var nameKey = item.name || "UNKNOWN";
+                if(!groups[nameKey]) groups[nameKey] = [];
+                groups[nameKey].push(item);
+            });
+            var html = "";
+
+            var sortedGroupKeys = Object.keys(groups).sort((keyA, keyB) => {
+                var datesA = groups[keyA].map(i => new Date(i.date).getTime());
+                var datesB = groups[keyB].map(i => new Date(i.date).getTime());
+                return Math.min(...datesA) - Math.min(...datesB);
+            });
+            sortedGroupKeys.forEach((groupName, groupIndex) => {
+                var items = groups[groupName];
+                items.sort((a,b) => new Date(a.date) - new Date(b.date));
+                var count = items.length;
+                var earliestDate = items[0].date;
+                var d = new Date(earliestDate);
+                var diff = Math.ceil((d - today)/86400000);
+                
+                var statusText = diff < 0 ? '[EXPIRED]' : (diff <= 7 ? '[SOON]' : '[OK]');
+                var statusStyle = diff < 0 ? 'color:red' : (diff <= 7 ? 'color:#f39c12' : 'color:green');
+
+                var subCardsHtml = items.map(item => {
+                    var iDate = new Date(item.date);
+                    var iDiff = Math.ceil((iDate - today)/86400000);
+                    var cls = iDiff < 0 ? "bg-red" : (iDiff <= 7 ? "bg-yellow" : "bg-green");
+                    
+                    var checkHTML = item.isTemp ? "" : 
+                        `<div class="chk-wrapper"><input type="checkbox" class="del-checkbox" value="${item.rowId}" onchange="checkSelection()"></div>`;
+                    return `
+                        <div class="card ${item.isTemp ? 'temp-item' : ''}">
+                            ${checkHTML}
+                            <img src="${item.imgUrl || ''}" onclick="event.stopPropagation(); openModal(this.src)">
+                            <div style="flex:1">
+                                <div><span class="creator-tag">BY: ${item.creator || 'UNKNOWN'}</span></div>
+                                <div style="font-size:13px; color:#666">LOC: ${item.location}</div>
+                                <div class="tag ${cls}">${item.date} (${iDiff}d)</div>
+                            </div>
+                            ${item.isTemp ? '<span style="font-size:12px;color:#f39c12">SYNC...</span>' : 
+                            `<button style="width:auto; background:none; color:#ccc; border:none; font-size:20px;" onclick="event.stopPropagation(); doDel(${item.rowId})">✕</button>`}
+                        </div>
+                    `;
+                }).join("");
+
+                html += `
+                    <div class="group-container">
+                        <div class="group-header" id="group-header-${groupIndex}" onclick="toggleGroup(${groupIndex})">
+                            <div class="group-title">
+                                <span class="arrow-icon">▶</span>
+                                <b>${groupName}</b>
+                                <span style="font-size:12px; background:#000; color:white; padding:1px 6px; margin-left:8px;">${count}</span>
+                            </div>
+                            <div class="group-info">
+                                <div style="${statusStyle}; font-weight:bold;">${earliestDate}</div>
+                                <div>${statusText}</div>
+                            </div>
+                        </div>
+                        <div class="group-body" id="group-body-${groupIndex}">
+                            ${subCardsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+            listDiv.innerHTML = html;
+            checkSelection(); 
+        }
+
+        function refreshData(code, silent) {
+            callApi("getList", {code: code}, res => updateLocalData(res.data), silent);
+        }
+
+        window.onload = function() {
+            var code = localStorage.getItem("pass_code");
+            if(!code) return window.location.href = "index.html";
+            document.getElementById("displayCode").innerText = code;
+            var cached = localStorage.getItem("cached_fridge_data");
+            if(cached) {
+                try { allData = JSON.parse(cached); renderList(); } catch(e){}
+                refreshData(code, true);
+            } else {
+                refreshData(code, false);
+            }
+        };
+    </script>
+</body>
+</html>

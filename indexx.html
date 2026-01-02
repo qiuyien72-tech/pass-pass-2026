@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <title>冰箱小管家 - 登入</title>
+    <style>
+      :root {
+        --bg-grid: #f4f4f4;
+        --ink: #333;
+        --card-bg: #ffffff;
+        --highlight-yellow: rgba(255, 241, 0, 0.4);
+      }
+      
+      body { 
+        font-family: 'Courier Prime', 'Noto Sans TC', monospace;
+        background-color: #fff;
+        background-image: 
+            linear-gradient(#e5e5e5 1px, transparent 1px),
+            linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+        background-size: 50px 50px;
+        margin: 0; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        height: 100vh;
+        color: var(--ink);
+      }
+
+      #loginBox { 
+        width: 100%;
+        max-width: 360px;
+        background: var(--card-bg);
+        padding: 40px 30px; 
+        position: relative;
+        border: 2px solid var(--ink);
+        box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
+      }
+
+      h2 {
+        text-align: center;
+        margin-bottom: 40px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      h2 span { background: var(--highlight-yellow); padding: 0 10px; }
+      
+      input {
+        width: 100%; 
+        padding: 12px 5px; 
+        margin-bottom: 30px; 
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid #aaa; 
+        border-radius: 0;
+        font-family: inherit;
+        font-size: 18px;
+        color: var(--ink);
+        outline: none;
+        transition: border-color 0.3s;
+        text-align: center;
+      }
+      input:focus { border-bottom-color: #000; background: rgba(0,0,0,0.02); }
+      input::placeholder { color: #999; font-style: italic; font-size: 14px; }
+
+      button { 
+        width: 100%; 
+        padding: 15px; 
+        margin-bottom: 15px; 
+        background: var(--ink); 
+        color: white; 
+        border: 2px solid var(--ink); 
+        font-weight: bold; 
+        font-family: inherit;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: transform 0.1s;
+      }
+      button:active { transform: translate(2px, 2px); }
+      
+      .secondary { background: transparent; color: var(--ink); border: 2px solid var(--ink); }
+
+      #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 1000; }
+      .spinner { width: 50px; height: 50px; background: transparent; border: 4px solid #000; margin-bottom: 20px; animation: simpleSpin 1s linear infinite; }
+      @keyframes simpleSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      #loaderText { color: var(--ink); font-weight: bold; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div id="loader">
+        <div class="spinner"></div>
+        <div id="loaderText">CONNECTING...</div>
+    </div>
+
+    <div id="loginBox">
+        <h2><span>FRIDGE LOG</span></h2>
+        <input type="text" id="codeIn" placeholder="ENTER ACCESS CODE" style="text-transform:uppercase;">
+        <button onclick="doLogin()">[ ENTER SYSTEM ]</button>
+        <button class="secondary" onclick="doRegister()">GENERATE NEW CODE</button>
+    </div>
+
+    <script>
+        // 請確保這一行網址完整，不要斷行
+        var API_URL = "https://script.google.com/macros/s/AKfycby_sDF8GC1jTH1yUN_UM1s_AdIvr0CHgtwiQ-GYMCMj__De6OQAm-NtUQWDn3f8avbD/exec";
+        
+        function showLoader(text) { 
+            document.getElementById("loaderText").innerText = text; 
+            document.getElementById("loader").style.display = "flex"; 
+        }
+        
+        function hideLoader() { 
+            document.getElementById("loader").style.display = "none"; 
+        }
+
+        function doLogin() {
+            var codeIn = document.getElementById("codeIn");
+            if (!codeIn) return;
+            var code = codeIn.value.toUpperCase().trim();
+            if(!code) return alert("請輸入代碼");
+            
+            showLoader("VERIFYING...");
+            fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "checkCode", code: code }) })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if(res.valid) {
+                    showLoader("ACCESS GRANTED");
+                    localStorage.setItem("pass_code", code);
+                    if(res.data) {
+                        localStorage.setItem("cached_fridge_data", JSON.stringify(res.data));
+                    }
+                    // 登入成功，直接跳轉主畫面
+                    window.location.href = "main.html"; 
+                } else {
+                    hideLoader();
+                    alert("❌ INVALID CODE");
+                }
+            })
+            .catch(function(e) { 
+                hideLoader(); 
+                alert("CONNECTION FAILED"); 
+                console.error(e);
+            });
+        }
+
+        function doRegister() {
+            showLoader("GENERATING...");
+            fetch(API_URL, { method: "POST", body: JSON.stringify({ action: "register" }) })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                localStorage.setItem("pass_code", res.code);
+                alert("CODE GENERATED: " + res.code);
+                // 註冊成功，直接跳轉主畫面
+                window.location.href = "main.html";
+            })
+            .catch(function(e) {
+                hideLoader();
+                console.error(e);
+            });
+        }
+        
+        window.onload = function() { 
+            if(localStorage.getItem("pass_code")) {
+                window.location.href = "main.html";
+            }
+        };
+    </script>
+</body>
+</html>
+
+
+
