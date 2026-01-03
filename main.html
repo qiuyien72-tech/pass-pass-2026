@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <title>pass pass 主畫面</title>
+    <title>冰箱小管家 - 筆記模式</title>
     <style>
       :root {
          --bg-grid: #f4f4f4;
@@ -33,9 +33,7 @@
         padding: 20px; 
         color: var(--ink); 
         padding-bottom: 120px; 
-        
-        /* 關鍵：左側留白給側邊欄 (140px寬度 + 20px間距) */
-        padding-left: 160px; 
+        padding-left: 160px; /* 左側留白給側邊欄 */
       }
 
       /* --- 側邊導覽列 (Side Menu) --- */
@@ -43,19 +41,18 @@
           position: fixed;
           top: 0;
           left: 0;
-          height: 100%; /* 全高度 */
-          width: 140px; /* 固定寬度 */
-          background: #fff; /* 白底 */
-          border-right: 3px solid var(--ink); /* 右側粗黑線分隔 */
+          height: 100%;
+          width: 140px;
+          background: #fff;
+          border-right: 3px solid var(--ink);
           display: flex;
           flex-direction: column;
           padding: 20px 15px;
           box-sizing: border-box;
           z-index: 2000;
-          box-shadow: 5px 0 15px rgba(0,0,0,0.05); /* 微微陰影讓它浮起來 */
+          box-shadow: 5px 0 15px rgba(0,0,0,0.05);
       }
 
-      /* 選單標題 (MENU) */
       .menu-label {
           font-size: 1.2rem;
           font-weight: 900;
@@ -78,7 +75,7 @@
           cursor: pointer;
           border: 2px solid;
           background: #fff;
-          box-shadow: 4px 4px 0 rgba(0,0,0,0.1); /* 方塊陰影 */
+          box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
           transition: all 0.1s;
           text-align: center;
           display: flex;
@@ -89,20 +86,11 @@
           border-radius: 4px;
       }
 
-      /* 按鈕 Icon 大小 */
       .side-btn span { font-size: 24px; display: block; }
 
-      /* 按鈕懸停效果 */
-      .side-btn:hover { 
-          transform: translate(-2px, -2px); 
-          box-shadow: 6px 6px 0 rgba(0,0,0,0.15); 
-      }
-      .side-btn:active { 
-          transform: translate(2px, 2px); 
-          box-shadow: 2px 2px 0 rgba(0,0,0,0.1); 
-      }
+      .side-btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 rgba(0,0,0,0.15); }
+      .side-btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
 
-      /* 個別按鈕配色 */
       .btn-expired { color: var(--btn-red); border-color: var(--btn-red); }
       .btn-expired:hover { background: #fff0f0; }
 
@@ -112,41 +100,38 @@
       .btn-valid { color: var(--btn-green); border-color: var(--btn-green); }
       .btn-valid:hover { background: #f0fff4; }
 
-      /* 登出按鈕：推到底部 */
       .btn-exit { 
-          margin-top: auto; /* 自動推到底 */
+          margin-top: auto;
           background: var(--ink); 
           color: #fff; 
           border-color: var(--ink); 
       }
       .btn-exit:hover { background: #000; border-color: #000; color: #fff; }
 
-
-      /* --- RWD 手機版：變成底部導覽列 --- */
+      /* --- RWD 手機版 --- */
       @media (max-width: 850px) {
           body {
-              padding-left: 20px; /* 恢復原本內距 */
-              padding-bottom: 100px; /* 底部留空給選單 */
+              padding-left: 20px;
+              padding-bottom: 100px;
           }
           .side-menu {
               width: 100%; 
-              height: auto; /* 高度自動 */
+              height: auto;
               top: auto; 
-              bottom: 0; /* 貼底 */
+              bottom: 0;
               border-right: none; 
-              border-top: 3px solid var(--ink); /* 改成上邊框 */
-              flex-direction: row; /* 水平排列 */
+              border-top: 3px solid var(--ink);
+              flex-direction: row;
               padding: 10px;
               gap: 8px;
               justify-content: space-around;
               box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
           }
-          .menu-label { display: none; /* 手機版隱藏 MENU 標題 */ }
-          
+          .menu-label { display: none; }
           .side-btn {
               margin-bottom: 0;
-              flex: 1; /* 平均分配寬度 */
-              box-shadow: none; /* 手機版移除陰影比較乾淨 */
+              flex: 1;
+              box-shadow: none;
               font-size: 11px;
               padding: 6px 2px;
               border-width: 1px;
@@ -155,8 +140,6 @@
           .side-btn:hover { transform: none; box-shadow: none; }
           .btn-exit { margin-top: 0; }
       }
-
-      /* --------------------------- */
 
       .main-wrapper {
         max-width: 850px;
@@ -208,7 +191,6 @@
         background: rgba(0,0,0,0.02);
       }
 
-      /* 主要操作按鈕 (COMMIT) */
       .action-btn { 
         background: var(--ink); 
         color: white; 
@@ -361,7 +343,7 @@
         <div class="panel-card">
             <div class="header">
                 <div>FRIDGE LOG <span id="displayCode" style="background:#000; color:#fff; padding:2px 6px; font-size:14px;">...</span></div>
-                </div>
+            </div>
 
             <div class="mode-switch">
                 <label>
@@ -591,7 +573,8 @@
 
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
-            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            // 修正處：改成 Number 支援小數點 ID
+            var idsToDelete = Array.from(checkboxes).map(cb => Number(cb.value));
             if (idsToDelete.length === 0) return;
             if (!confirm("DELETE " + idsToDelete.length + " ITEMS?")) return;
             
@@ -739,4 +722,3 @@
     </script>
 </body>
 </html>
-
