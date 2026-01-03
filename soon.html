@@ -4,13 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <title>即將過期</title>
+    <title>冰箱小管家 - 即將過期</title>
     <style>
       :root {
          --bg-grid: #f4f4f4;
          --ink: #333;
          --card-bg: #ffffff;
-         /* 主題色改為橘色 */
          --alert-orange: #f39c12; 
       }
       
@@ -33,7 +32,6 @@
         width: 100%;
       }
 
-      /* 橘色警示風格卡片 */
       .panel-card {
         background: var(--card-bg);
         border: 2px solid var(--ink);
@@ -101,7 +99,6 @@
         background: rgba(243, 156, 18, 0.05);
       }
 
-      /* 列表樣式 */
       #list { margin-top: 20px; }
 
       .group-container { margin-bottom: 30px; }
@@ -124,7 +121,7 @@
         margin-bottom: 0; 
         display: flex; 
         align-items: center; 
-        background: rgba(243, 156, 18, 0.05); /* 淡淡橘底 */
+        background: rgba(243, 156, 18, 0.05); 
         transition: background 0.2s;
       }
       .card:hover { background: rgba(243, 156, 18, 0.1); }
@@ -158,13 +155,11 @@
       }
       .del-btn:hover { background: var(--alert-orange); color: #fff; }
 
-      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { width: 50px; height: 50px; border: 4px solid var(--ink); animation: spin 0.5s linear infinite; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #loaderText { margin-top: 15px; font-weight: bold; }
 
-      /* 圖片燈箱 (置中) */
       #imageModal { 
           display: none; 
           position: fixed; 
@@ -183,7 +178,6 @@
           box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
       }
 
-      /* 浮動按鈕 */
       .float-btn { 
           position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
           padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; 
@@ -263,7 +257,8 @@
 
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
-            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            // 修正處：改成 Number
+            var idsToDelete = Array.from(checkboxes).map(cb => Number(cb.value));
             if (idsToDelete.length === 0) return;
             
             if (!confirm("DELETE " + idsToDelete.length + " SELECTED ITEMS?")) return;
@@ -298,7 +293,6 @@
             renderSoonList();
         }
 
-        // --- 核心：篩選快過期 (0~7天) ---
         function renderSoonList() {
             var listDiv = document.getElementById("list");
             var key = document.getElementById("search").value.toLowerCase();
@@ -308,12 +302,8 @@
             var soonItems = allData.filter(i => {
                 var s = String(i.name||"") + String(i.location||"") + String(i.creator||"");
                 var iDate = new Date(i.date);
-                // 計算差距天數
                 var diff = Math.ceil((iDate - today)/86400000);
-                
-                // 條件：0 <= diff <= 7 (代表今天到未來7天內)
                 var isSoon = diff >= 0 && diff <= 7;
-                
                 return s.toLowerCase().includes(key) && isSoon;
             });
 
@@ -323,7 +313,6 @@
                 return;
             }
 
-            // 排序：越接近過期的排越前面
             soonItems.sort((a,b) => new Date(a.date) - new Date(b.date));
 
             var html = "";
@@ -332,8 +321,6 @@
             soonItems.forEach(item => {
                 var d = new Date(item.date);
                 var diff = Math.ceil((d - today)/86400000);
-                
-                // 顯示文字調整
                 var dayText = diff === 0 ? "今天到期" : "還有 " + diff + " 天";
 
                 html += `
@@ -379,5 +366,3 @@
     </script>
 </body>
 </html>
-
-
