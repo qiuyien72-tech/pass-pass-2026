@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
-    <title>已過期清單</title>
+    <title>冰箱小管家 - 已過期清單</title>
     <style>
       :root {
          --bg-grid: #f4f4f4;
@@ -32,7 +32,6 @@
         width: 100%;
       }
 
-      /* 紅色警示風格卡片 */
       .panel-card {
         background: var(--card-bg);
         border: 2px solid var(--ink);
@@ -100,7 +99,6 @@
         background: rgba(231, 76, 60, 0.05);
       }
 
-      /* 列表樣式 */
       #list { margin-top: 20px; }
 
       .group-container { margin-bottom: 30px; }
@@ -157,21 +155,18 @@
       }
       .del-btn:hover { background: var(--alert-red); color: #fff; }
 
-      /* Loader */
       #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); display:none; justify-content:center; align-items:center; flex-direction:column; z-index: 9999; }
       .spinner { width: 50px; height: 50px; border: 4px solid var(--ink); animation: spin 1s linear infinite; }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
       #loaderText { margin-top: 15px; font-weight: bold; }
 
-      /* 圖片燈箱 (修正置中問題) */
       #imageModal { 
-          display: none; /* 預設隱藏 */
+          display: none; 
           position: fixed; 
           top: 0; left: 0; 
           width: 100%; height: 100%; 
           background: rgba(255,255,255,0.95); 
           z-index: 10000; 
-          /* 關鍵：Flexbox 置中 */
           justify-content: center; 
           align-items: center; 
           flex-direction: column; 
@@ -183,7 +178,6 @@
           box-shadow: 10px 10px 0 rgba(0,0,0,0.1); 
       }
 
-      /* 浮動按鈕 */
       .float-btn { 
           position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); 
           padding: 15px 30px; border-radius: 0; font-size: 16px; font-weight: bold; 
@@ -232,7 +226,6 @@
         }
         function hideLoader() { document.getElementById("loader").style.display = "none"; }
 
-        // --- 修正：開啟圖片時強制使用 flex 以便置中 ---
         function openModal(src) {
             document.getElementById("largeImgDisplay").src = src;
             document.getElementById("imageModal").style.display = "flex";
@@ -264,7 +257,8 @@
 
         function doMultiDelete() {
             var checkboxes = document.querySelectorAll('.del-checkbox:checked');
-            var idsToDelete = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            // 修正處：改成 Number
+            var idsToDelete = Array.from(checkboxes).map(cb => Number(cb.value));
             if (idsToDelete.length === 0) return;
             
             if (!confirm("DELETE " + idsToDelete.length + " SELECTED ITEMS?")) return;
@@ -370,5 +364,3 @@
     </script>
 </body>
 </html>
-
-
